@@ -20,4 +20,4 @@ scoop uninstall clipforge
 
 Your settings and videos (`data` and `workspace`) live in Scoop's persist folder (`~\scoop\persist\clipforge`), so they survive updates. `scoop uninstall clipforge --purge` removes them too.
 
-The manifest takes each new version, and its SHA-256 from `SHA256SUMS.txt`, from the [ClipForge releases](https://github.com/DrummingBird1/clipforge-app/releases).
+New versions come from the [ClipForge releases](https://github.com/DrummingBird1/clipforge-app/releases): a scheduled workflow opens a pull request with the version and its SHA-256, checked against the downloaded zip and `SHA256SUMS.txt`.

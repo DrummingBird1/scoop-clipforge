@@ -21,7 +21,7 @@ A [Scoop](https://scoop.sh) bucket that installs ClipForge, a local video studio
 
 ## Type
 
-- Package manifest repository, no application code and no build step. License terms are those of the packaged app (MIT, per the manifest).
+- Package manifest repository, no application code and no build step. One workflow, `.github/workflows/update-manifest.yml` with `scripts/update_manifest.py` (standard library only), opens a pull request when the app has a newer release; it never writes to `main`. License terms are those of the packaged app (MIT, per the manifest).
 - Files: `README.md` (user instructions) and `bucket/clipforge.json` (the Scoop manifest: `version`, `url`, `hash`, `extract_dir`, `shortcuts`, `persist`, `checkver`, `autoupdate`).
 - The packaged app is a separate repository (`clipforge-app`). Each new version is published there as a GitHub Release with `ClipForge-<version>-win64.zip` and `SHA256SUMS.txt`.
 - `persist` keeps `data` and `workspace` across updates. Do not remove them from the manifest: they hold the user's settings and videos.
@@ -29,7 +29,8 @@ A [Scoop](https://scoop.sh) bucket that installs ClipForge, a local video studio
 ## Run
 
 - Install from a local manifest on a Windows machine with Scoop: `scoop install .\bucket\clipforge.json`.
-- Update the manifest for a new release: set `version`, put the same version in `url` and `extract_dir`, and set `hash` to the zip's line in the Release's `SHA256SUMS.txt`. With Scoop installed, `checkver.ps1 -App clipforge -Dir bucket -Update` (in Scoop's `apps\scoop\current\bin`) does this from the manifest's `autoupdate` block.
+- A new release normally arrives as a pull request from the workflow. `python scripts/update_manifest.py` does the same check and edit locally (it downloads the zip, about 300 MB, when there is a newer version).
+- Update the manifest by hand: set `version`, put the same version in `url` and `extract_dir`, and set `hash` to the zip's line in the Release's `SHA256SUMS.txt`. With Scoop installed, `checkver.ps1 -App clipforge -Dir bucket -Update` (in Scoop's `apps\scoop\current\bin`) does this from the manifest's `autoupdate` block.
 - Not verified while writing this file: the commands above come from the packaged app's release notes in its repository, they were not run here.
 
 ## Test
