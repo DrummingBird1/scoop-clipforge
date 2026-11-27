@@ -1,0 +1,77 @@
+# Opens a pull request when ClipForge has a newer release than the manifest.
+# It never writes to main: a person reviews and merges the pull request.
+# Needs no secret beyond the GITHUB_TOKEN that Actions creates for each run.
+# To stop it: Actions tab -> "Update manifest" -> Disable workflow.
+name: Update manifest
+
+on:
+  schedule:
+    - cron: "23 */6 * * *" # every six hours (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write # push the update branch
+  pull-requests: write # open the pull request
+
+concurrency:
+  group: update-manifest
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+
+      - name: Check the latest release and update the manifest
+        id: manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/update_manifest.py
+
+      - name: Open a pull request
+        if: steps.manifest.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.manifest.outputs.version }}
+          HASH: ${{ steps.manifest.outputs.hash }}
+        run: |
+          set -euo pipefail
+          branch="agent/actions-clipforge-$VERSION"
+
+          # One pull request per version. A closed one stays closed.
+          existing=$(gh pr list --head "$branch" --state all --json url --jq '.[0].url // ""')
+          if [ -n "$existing" ]; then
+            echo "A pull request for $VERSION already exists: $existing" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # The branch can be left over from a run that could not open the pull request.
+          # Reuse it as it is (no force push).
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            git fetch origin "$branch"
+            if ! git diff --quiet FETCH_HEAD -- bucket/clipforge.json; then
+              echo "Branch $branch exists with a different manifest. Check it by hand." >&2
+              exit 1
+            fi
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git switch -c "$branch"
+            git commit -m "ClipForge $VERSION" -- bucket/clipforge.json
+            git push origin "$branch"
+          fi
+
+          cat > pr_body.md <<EOF
+          Updates the manifest to [ClipForge $VERSION](https://github.com/DrummingBird1/clipforge-app/releases/tag/v$VERSION).
+
+          SHA-256: \`$HASH\`
+
+          Checked by the workflow: the downloaded zip has this hash, it matches the release's \`SHA256SUMS.txt\`, and only \`version\`, \`url\`, \`hash\` and \`extract_dir\` changed.
+          Not checked: installing or updating with Scoop.
+          EOF
+
+          gh pr create --base main --head "$branch" --title "ClipForge $VERSION" --body-file pr_body.md >> "$GITHUB_STEP_SUMMARY"
