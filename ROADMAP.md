@@ -9,7 +9,7 @@ This file is the source of truth for the project plan. There is no separate chan
 - Stage: released. The manifest tracks ClipForge 2.0.1 (commit "ClipForge 2.0.1", 2026-11-17).
 - History so far: 1.1.2 and 1.1.3 (2026-10-30), 1.2.0 (2026-11-08), 2.0.1 (2026-11-17).
 - The manifest covers install, Start menu shortcut, `persist` for `data` and `workspace`, `checkver` and `autoupdate` (version, URL and SHA-256 come from the app's GitHub Release).
-- Automatic updates: `.github/workflows/update-manifest.yml` checks for a new ClipForge release every six hours (and on demand), verifies the zip against `SHA256SUMS.txt` and opens a pull request. It never writes to `main`. The update script was tested locally; the workflow has not run on GitHub yet. It starts working once it is on `main`, GitHub Actions is enabled for the repository, and Actions is allowed to create pull requests.
+- Automatic updates: `.github/workflows/update-manifest.yml` checks for a new ClipForge release every six hours (and on demand), verifies the zip against `SHA256SUMS.txt` and opens a pull request. It never writes to `main`. It is on `main`, with GitHub Actions enabled and allowed to create pull requests. A manual run on 2026-11-27 (UTC) succeeded and found nothing to update. It has not opened a pull request yet: there has been no newer release.
 - Docs: `README.md` (user instructions) and `AGENTS.md` (agent guide).
 - Project tracker: no Trello board was created; the workspace is at its open-board limit.
 
@@ -21,7 +21,6 @@ This file is the source of truth for the project plan. There is no separate chan
 
 ## Next
 
-- Turn the automatic update on: merge the workflow, enable the two Actions settings, run it once from the Actions tab.
 - Confirm on the first new release that the pull request appears and that `scoop update clipforge` installs it.
 
 ## Open questions
